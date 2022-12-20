@@ -24,6 +24,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	apb "google.golang.org/protobuf/types/known/anypb"
 
+	"github.com/k0kubun/pp"
 	api "github.com/osrg/gobgp/v3/api"
 	"github.com/osrg/gobgp/v3/pkg/packet/bgp"
 )
@@ -1073,6 +1074,22 @@ func MarshalNLRI(value bgp.AddrPrefixInterface) (*apb.Any, error) {
 				Teid:                  r.TEID,
 			}
 		}
+	case *bgp.OpaqueNLRI:
+		sid, _, err := GetSrv6EpeSid()
+		if err != nil {
+			return nil, err
+		}
+		if sid == "" {
+			nlri = &api.OpaqueNLRI{
+				Key:   v.Key,
+				Value: v.Value,
+			}
+		} else {
+			nlri = &api.OpaqueNLRI{
+				Key:   []byte("srv6-epe-sid"),
+				Value: []byte(sid),
+			}
+		}
 	}
 
 	an, _ := apb.New(nlri)
@@ -1273,6 +1290,11 @@ func UnmarshalNLRI(rf bgp.RouteFamily, an *apb.Any) (bgp.AddrPrefixInterface, er
 			return nil, err
 		}
 		nlri = bgp.NewMUPType2SessionTransformedRoute(rd, ea, v.Teid)
+	case *api.OpaqueNLRI:
+		pp.Println(v.Key)
+		pp.Println(string(v.Value))
+		nlri = bgp.NewOpaqueNLRI(v.Key, v.Value)
+		pp.Println("api.unmarshal!!!!!!!")
 	}
 
 	if nlri == nil {

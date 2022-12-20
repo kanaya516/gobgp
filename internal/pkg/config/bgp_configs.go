@@ -3181,6 +3181,8 @@ type NeighborConfig struct {
 	NeighborInterface string `mapstructure:"neighbor-interface" json:"neighbor-interface,omitempty"`
 	// original -> gobgp:vrf
 	Vrf string `mapstructure:"vrf" json:"vrf,omitempty"`
+	// original -> gobgp:srv6-epe-sid
+	Srv6EpeSid string `mapstructure:"srv6-epe-sid" json:"srv6-epe-sid,omitempty"`
 }
 
 func (lhs *NeighborConfig) Equal(rhs *NeighborConfig) bool {
@@ -3979,6 +3981,9 @@ type AfiSafiConfig struct {
 	// This leaf indicates whether the IPv4 Unicast AFI,SAFI is
 	// enabled for the neighbour or group.
 	Enabled bool `mapstructure:"enabled" json:"enabled,omitempty"`
+	// This leaf indicates the SRv6-EPE SID
+	// TODO: string to Ipv6Unicast
+	Srv6EpeSid string `mapstructure:"srv6-epe-sid" json:"srv6-epe-sid,omitempty"`
 }
 
 func (lhs *AfiSafiConfig) Equal(rhs *AfiSafiConfig) bool {
@@ -4854,6 +4859,10 @@ type GlobalConfig struct {
 	Port int32 `mapstructure:"port" json:"port,omitempty"`
 	// original -> gobgp:local-address
 	LocalAddressList []string `mapstructure:"local-address-list" json:"local-address-list,omitempty"`
+	// This leaf indicates whether the SRv6-EPE is enabled for the nrighbor or group
+	Srv6EpeEnabled bool `mapstructure:"srv6-epe-enabled" json:"srv6-epe-enabled,omitempty"`
+	// This leaf indicates the locator of SRv6-EPE SIDs
+	Srv6EpeLoc string `mapstructure:"srv6-epe-loc" json:"srv6-epe-loc,omitempty"`
 }
 
 func (lhs *GlobalConfig) Equal(rhs *GlobalConfig) bool {

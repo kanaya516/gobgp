@@ -28,8 +28,10 @@ import (
 	"time"
 
 	"github.com/eapache/channels"
+	"github.com/k0kubun/pp"
 	"github.com/osrg/gobgp/v3/internal/pkg/config"
 	"github.com/osrg/gobgp/v3/internal/pkg/table"
+	"github.com/osrg/gobgp/v3/pkg/apiutil"
 	"github.com/osrg/gobgp/v3/pkg/log"
 	"github.com/osrg/gobgp/v3/pkg/packet/bgp"
 	"github.com/osrg/gobgp/v3/pkg/packet/bmp"
@@ -1762,6 +1764,12 @@ func (h *fsmHandler) recvMessageloop(ctx context.Context, wg *sync.WaitGroup) er
 func (h *fsmHandler) established(ctx context.Context) (bgp.FSMState, *fsmStateReason) {
 	var wg sync.WaitGroup
 	fsm := h.fsm
+	pp.Println("established!!!")
+	pp.Println(fsm.pConf.Config)
+	if fsm.pConf.Config.Srv6EpeSid != "" {
+		apiutil.LocalExecutef("ip -6 route add %s encap seg6local action End.DX6 nh6 %s dev net0", fsm.pConf.Config.Srv6EpeSid, fsm.pConf.Config.NeighborAddress)
+	}
+
 	fsm.lock.Lock()
 	h.conn = fsm.conn
 	fsm.lock.Unlock()

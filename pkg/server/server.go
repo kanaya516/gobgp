@@ -30,6 +30,7 @@ import (
 
 	"github.com/eapache/channels"
 	"github.com/google/uuid"
+	"github.com/k0kubun/pp"
 	"google.golang.org/grpc"
 
 	api "github.com/osrg/gobgp/v3/api"
@@ -2989,6 +2990,8 @@ func (s *BgpServer) addPeerGroup(c *config.PeerGroup) error {
 }
 
 func (s *BgpServer) addNeighbor(c *config.Neighbor) error {
+	pp.Println("addNeighbor")
+	pp.Println(c.Config)
 	addr, err := c.ExtractNeighborAddress()
 	if err != nil {
 		return err

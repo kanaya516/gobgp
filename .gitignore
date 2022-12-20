@@ -32,3 +32,8 @@ test/scenario_test/nosetest*.xml
 # IDE workspace
 .idea
 .vscode
+
+Makefile
+.gitignore
+bin
+conf/*

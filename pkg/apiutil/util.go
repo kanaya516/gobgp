@@ -19,8 +19,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"os/exec"
+	"strings"
 	"time"
 
+	"github.com/fatih/color"
+	"github.com/k0kubun/pp"
 	api "github.com/osrg/gobgp/v3/api"
 	"github.com/osrg/gobgp/v3/pkg/packet/bgp"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
@@ -136,3 +140,79 @@ func ToApiFamily(afi uint16, safi uint8) *api.Family {
 		Safi: api.Family_Safi(safi),
 	}
 }
+
+type OpaqueSignaling struct {
+	Key []Opaque `json:"srv6-epe-sid"`
+}
+
+type Opaque struct {
+	Nlri KeyValue `json:"nlri"`
+}
+
+type KeyValue struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
+func GetSrv6EpeSid() (string, string, error) {
+	var out string
+	var sid string
+	var nh6 string
+	out, _ = LocalExecutef("ip -6 route | grep End.DX6")
+	pp.Println(out)
+	epeRoute := strings.Split(out, " ")
+	pp.Println("epeRoute", epeRoute)
+	if len(epeRoute) < 1 {
+		// FIBにはないので，gobgpデーモンから取得する
+		out, err := LocalExecutef("/gobgp global rib -a opaque -j")
+		if err != nil {
+			return "", "", err
+		}
+
+		var opasig OpaqueSignaling
+		json.Unmarshal([]byte(out), &opasig)
+		sid = opasig.Key[0].Nlri.Value
+		return sid, "", err
+	}
+	sid = epeRoute[0]
+	for i, r := range epeRoute {
+		if r == "nh6" {
+			nh6 = epeRoute[i+1]
+		}
+	}
+	if nh6 == "" {
+		return "", "", nil
+	}
+	return sid, nh6, nil
+}
+
+func LocalExecute(cmd string) (string, error) {
+	out, err := exec.Command("sh", "-c", cmd).Output()
+	if err != nil {
+		str := fmt.Sprintf("CommandExecute [%s] ", cmd)
+		str += fmt.Sprintf(color.RedString("Failed"))
+		str += fmt.Sprintf(color.RedString("%s", err.Error()))
+		fmt.Printf("%s\n", str)
+		return "", err
+	}
+
+	str := fmt.Sprintf("CommandExecute [%s] ", cmd)
+	str += fmt.Sprintf(color.GreenString("Success"))
+	fmt.Printf("%s\n", str)
+	return string(out), nil
+}
+
+func LocalExecutef(fs string, a ...interface{}) (string, error) {
+	cmd := fmt.Sprintf(fs, a...)
+	return LocalExecute(cmd)
+}
+
+// func AdvertiseSrv6EpeSid() {
+// 	sid, nh6, err := GetSrv6EpeSid()
+// 	if err != nil {
+// 		return
+// 	}
+// 	attrs := make([]bgp.PathAttributeInterface, 0, 1)
+// 	attrs = append(attrs, bgp.NewPathAttributeMpReachNLRI(nh6))
+// 	bgp.NewBGPUpdateMessage(nil, attrs, nil)
+// }
