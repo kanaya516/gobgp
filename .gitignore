@@ -37,3 +37,4 @@ Makefile
 .gitignore
 bin
 conf/*
+tinet/*

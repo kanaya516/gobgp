@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/k0kubun/pp"
 	api "github.com/osrg/gobgp/v3/api"
 	"github.com/osrg/gobgp/v3/pkg/packet/bgp"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
@@ -159,11 +158,8 @@ func GetSrv6EpeSid() (string, string, error) {
 	var sid string
 	var nh6 string
 	out, _ = LocalExecutef("ip -6 route | grep End.DX6")
-	pp.Println(out)
 	epeRoute := strings.Split(out, " ")
-	pp.Println("epeRoute", epeRoute)
 	if len(epeRoute) < 1 {
-		// FIBにはないので，gobgpデーモンから取得する
 		out, err := LocalExecutef("/gobgp global rib -a opaque -j")
 		if err != nil {
 			return "", "", err
